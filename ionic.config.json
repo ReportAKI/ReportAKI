@@ -1,6 +1,8 @@
 {
   "name": "ReportAKI",
-  "integrations": {},
+  "integrations": {
+    "capacitor": {}
+  },
   "type": "react",
   "id": "1cdf4fae"
 }
