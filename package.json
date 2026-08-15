@@ -5,7 +5,7 @@
   "scripts": {
     "setup": "npm install",
     "dev": "concurrently --kill-others --raw \"npm run dev --prefix web\" \"npm run dev --prefix api\" \"cd pocketbase && pocketbase.exe serve\"",
-    "build": "concurrently --raw \"npm run build --prefix web\"",
+    "build": "cd web && npm install && npm run build",
     "start": "concurrently --kill-others --raw \"npm run start --prefix api\" \"npm run start --prefix pocketbase\"",
     "lint": "concurrently --raw \"npm run lint --prefix web\" \"npm run lint --prefix api\""
   },
@@ -23,3 +23,4 @@
     "@capacitor/ios": "^8.5.0"
   }
 }
+
