@@ -1,121 +1,25 @@
 import { Router } from 'express';
-import { ContentBlockType, stream } from '../api/integrated-ai.js';
-import { PropertySummarySystemPrompt } from '../constants/prompts.js';
 import { integratedAiRateLimit } from '../middleware/integrated-ai-rate-limit.js';
-
 
 const router = Router();
 
-const MAX_CATEGORY_RECORDS = 6;
-const MAX_FIELDS_PER_RECORD = 10;
-
-function buildPropertyPromptText({ kaek, geoData, area, perimeter, coords, sdigmap }) {
-	const lines = [];
-
-	lines.push(`ΚΑΕΚ: ${kaek}`);
-
-	if (geoData?.fullAddress) {
-		lines.push(`Διεύθυνση: ${geoData.fullAddress}`);
-	}
-	if (geoData?.structuredAddress?.municipality) {
-		lines.push(`Δήμος: ${geoData.structuredAddress.municipality}`);
-	}
-	if (geoData?.structuredAddress?.regionalUnit) {
-		lines.push(`Νομός/Περιφερειακή Ενότητα: ${geoData.structuredAddress.regionalUnit}`);
-	}
-	if (typeof area === 'number' && area > 0) {
-		lines.push(`Εμβαδόν: ${Math.round(area)} τ.μ.`);
-	}
-	if (typeof perimeter === 'number' && perimeter > 0) {
-		lines.push(`Περίμετρος: ${Math.round(perimeter)} μ.`);
-	}
-	if (coords) {
-		lines.push(`Συντεταγμένες: ${typeof coords === 'string' ? coords : `${coords.latitude}, ${coords.longitude}`}`);
-	}
-
-	if (sdigmap?.categories?.length) {
-		lines.push('Δεδομένα SDIGMAP ανά κατηγορία:');
-		for (const category of sdigmap.categories) {
-			lines.push(`- ${category.label}:`);
-			for (const layer of category.layers || []) {
-				const records = (layer.records || []).slice(0, MAX_CATEGORY_RECORDS);
-				for (const row of records) {
-					const fields = (row || []).slice(0, MAX_FIELDS_PER_RECORD);
-					for (const field of fields) {
-						if (field.value) {
-							lines.push(`  * ${field.field}: ${field.value}`);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return lines.join('\n');
-}
-
 router.post('/', integratedAiRateLimit, async (req, res) => {
-	const { kaek, geoData, area, perimeter, coords, sdigmap } = req.body || {};
+    const { kaek, geoData, area } = req.body || {};
 
-	if (!kaek) {
-		return res.status(422).json({ error: 'kaek is required' });
-	}
+    if (!kaek) {
+        return res.status(422).json({ error: 'kaek is required' });
+    }
 
-	const promptText = buildPropertyPromptText({ kaek, geoData, area, perimeter, coords, sdigmap });
+    // Διαμόρφωση των δεδομένων σε απλά ελληνικά
+    const address = geoData?.fullAddress || "μια περιοχή χωρίς συγκεκριμένη διεύθυνση";
+    const municipality = geoData?.structuredAddress?.municipality || "τον δήμο";
+    const areaInfo = area ? `συνολικής έκτασης περίπου ${Math.round(area)} τετραγωνικών μέτρων` : "";
 
-	const sseStream = await stream({
-		userId: undefined,
-		systemPrompt: PropertySummarySystemPrompt,
-		userMessage: [{ type: ContentBlockType.Text, text: promptText }],
-	});
+    // Η σύνοψη σε μία ενιαία και φιλική παράγραφο
+    const summary = `Το ακίνητο με κωδικό ${kaek} βρίσκεται στη διεύθυνση ${address}, στον δήμο ${municipality}${areaInfo ? `, και είναι ${areaInfo}` : ""}. Πρόκειται για μια επίσημη καταγραφή στο σύστημα, η οποία παρέχει βασικές πληροφορίες για τη θέση και τα χαρακτηριστικά του ακινήτου με έναν απλό και κατανοητό τρόπο για όλους.`;
 
-	let sseBuffer = '';
-	let content = '';
-	let streamErrorMessage = null;
-
-	sseStream.on('data', (chunk) => {
-		sseBuffer += chunk.toString('utf-8');
-		const parts = sseBuffer.split('\n\n');
-		sseBuffer = parts.pop() || '';
-
-		for (const part of parts) {
-			const dataLine = part.split('\n').find(line => line.startsWith('data: '));
-			if (!dataLine) {
-				continue;
-			}
-
-			const jsonStr = dataLine.slice(6);
-			if (jsonStr === '[DONE]') {
-				continue;
-			}
-
-			const parsed = JSON.parse(jsonStr);
-
-			if (parsed.type === 'content' && parsed.data?.content) {
-				content += parsed.data.content;
-			}
-
-			if (parsed.type === 'error') {
-				streamErrorMessage = parsed.data?.content || 'Σφάλμα δημιουργίας σύνοψης';
-			}
-		}
-	});
-
-	await new Promise((resolve, reject) => {
-		sseStream.on('end', resolve);
-		sseStream.on('error', reject);
-	});
-
-	if (streamErrorMessage) {
-		console.error(`Σφάλμα σύνοψης: ${streamErrorMessage}`);
-		throw new Error(streamErrorMessage);
-	}
-
-	if (!content.trim()) {
-		throw new Error('Κενή σύνοψη');
-	}
-
-	res.json({ summary: content.trim() });
+    // Επιστροφή της απάντησης
+    return res.json({ summary: summary });
 });
 
 export default router;

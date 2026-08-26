@@ -5,11 +5,13 @@
   "scripts": {
     "setup": "npm install",
     "dev": "concurrently \"cd pocketbase && .\\pocketbase.exe serve\" \"cd api && npm run dev\" \"cd web && npm run dev\"",
-    "build": "cd web && npm install && npm run build && mkdir -p dist && cp -r dist/apps/web/* ../web/",
+    "build": "cd web && npm install && npx vite build --outDir www",
     "start": "concurrently --kill-others --raw \"npm run start --prefix api\" \"npm run start --prefix pocketbase\"",
     "lint": "concurrently --raw \"npm run lint --prefix web\" \"npm run lint --prefix api\""
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
     "concurrently": "^10.0.5",
     "knip": "^6.32.1",
     "react-scripts": "5.0.1"
@@ -19,8 +21,7 @@
   ],
   "dependencies": {
     "@capacitor/android": "^8.5.0",
-    "@capacitor/cli": "^8.5.0",
-    "@capacitor/core": "^8.5.0",
-    "@capacitor/ios": "^8.5.0"
+    "@capacitor/ios": "^8.5.0",
+    "nodemailer": "^9.0.5"
   }
 }

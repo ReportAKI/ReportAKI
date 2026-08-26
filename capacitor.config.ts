@@ -1,8 +1,9 @@
-import { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.example.reportakiapp',
-  appName: 'reportaki_app',
-  webDir: 'web', // ή ανάλογα που χτίζει το web σου
+  appId: 'com.reportaki.app',
+  appName: 'ReportAKI',
+  webDir: 'web/www'
 };
+
 export default config;

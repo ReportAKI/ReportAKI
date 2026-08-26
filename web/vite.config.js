@@ -402,6 +402,8 @@ export default defineConfig({
 		},
 	},
 	build: {
+		outDir: 'www', // Εδώ ορίζουμε τον φάκελο εξόδου σε 'www'
+		emptyOutDir: true, // Καθαρίζει τον φάκελο πριν από κάθε build
 		rollupOptions: {
 			external: [
 				'@babel/parser',
@@ -409,9 +411,6 @@ export default defineConfig({
 				'@babel/generator',
 				'@babel/types'
 			],
-			checks: {
-				pluginTimings: false,
-			}
 		}
 	}
 });

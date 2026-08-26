@@ -8,8 +8,6 @@ import MapPage from './pages/MapPage.jsx';
 import PropertyReportPage from './pages/PropertyReportPage.jsx';
 import ExportPage from './pages/ExportPage.jsx';
 import SearchResultsPage from './pages/SearchResultsPage.jsx';
-// --- ΔΙΑΓΡΑΨΙΜΟ: σελίδα export κώδικα σε ZIP ---
-import ExportCodePage from './pages/ExportCodePage.jsx';
 
 function App() {
   return (
@@ -22,8 +20,6 @@ function App() {
           <Route path="/map" element={<MapPage />} />
           <Route path="/property/:id" element={<PropertyReportPage />} />
           <Route path="/export" element={<ExportPage />} />
-          {/* --- ΔΙΑΓΡΑΨΙΜΟ: σελίδα export κώδικα σε ZIP --- */}
-          <Route path="/admin/export" element={<ExportCodePage />} />
         </Routes>
         <Toaster />
       </SearchProvider>
